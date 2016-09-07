@@ -57,41 +57,41 @@
     <Link />
     <Link>
       <AdditionalOptions>/nodefaultlib:MSVCRT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>..\3rdparty\assimp-3.0\lib\Release;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\assimp-3.1.1-win-binaries\lib64;</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\Core;..\Model;..\3rdparty\assimp-3.0\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Core;..\Model;..\..\..\assimp-3.1.1-win-binaries\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\3rdparty\assimp-3.0\bin\Release\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\Core;..\Model;..\3rdparty\assimp-3.0\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Core;..\Model;..\..\..\assimp-3.1.1-win-binaries\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\3rdparty\assimp-3.0\lib\Release;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\assimp-3.1.1-win-binaries\lib64;</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\3rdparty\assimp-3.0\bin\Release\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\Core;..\Model;..\3rdparty\assimp-3.0\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Core;..\Model;..\..\..\assimp-3.1.1-win-binaries\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\3rdparty\assimp-3.0\lib\Release;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\assimp-3.1.1-win-binaries\lib64;</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\3rdparty\assimp-3.0\bin\Release\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
