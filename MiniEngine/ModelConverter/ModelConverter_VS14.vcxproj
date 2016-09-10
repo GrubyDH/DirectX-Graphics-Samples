@@ -65,7 +65,7 @@
       <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
@@ -78,7 +78,7 @@
       <AdditionalDependencies>assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -91,7 +91,7 @@
       <AdditionalDependencies>assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(SolutionDir)</Command>
+      <Command>xcopy /E /C /I /R /Y $(SolutionDir)..\..\..\assimp-3.1.1-win-binaries\bin64\assimp.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
