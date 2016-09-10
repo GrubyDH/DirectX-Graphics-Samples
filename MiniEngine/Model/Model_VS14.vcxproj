@@ -52,6 +52,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
+  <ItemDefinitionGroup Condition="('$(Configuration)|$(Platform)'=='Debug|x64') And ('$(SolutionName)' == 'ModelConverter_VS14')">
+    <ClCompile>
+      <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="('$(Configuration)|$(Platform)'=='Profile|x64') And ('$(SolutionName)' == 'ModelConverter_VS14')">
+    <ClCompile>
+      <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="('$(Configuration)|$(Platform)'=='Release|x64') And ('$(SolutionName)' == 'ModelConverter_VS14')">
+    <ClCompile>
+      <PreprocessorDefinitions>MODEL_ENABLE_ASSIMP;MODEL_ENABLE_OPTIMIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
