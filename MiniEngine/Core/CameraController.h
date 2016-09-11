@@ -38,6 +38,9 @@ namespace GameCore
 
 		void EnableMomentum( bool enable ) { m_Momentum = enable; }
 
+        void SetMoveSpeed(float speed) { m_MoveSpeed = speed; }
+        void SetStrafeSpeed(float speed) { m_StrafeSpeed = speed; }
+
 	private:
 		CameraController& operator=( const CameraController& ) {return *this;}
 
