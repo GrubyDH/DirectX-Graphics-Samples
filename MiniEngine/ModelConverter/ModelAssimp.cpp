@@ -35,6 +35,9 @@ bool Model::LoadAssimp(const char *filename)
 	// remove points and lines
 	importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
+    // max angle between normals for smoothing
+    importer.SetPropertyFloat(AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE, 85.0f);
+
 	const aiScene *scene = importer.ReadFile(filename,
 		aiProcess_CalcTangentSpace |
 		aiProcess_JoinIdenticalVertices |
