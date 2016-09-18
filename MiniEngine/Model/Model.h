@@ -161,6 +161,9 @@ public:
 
 		unsigned int vertexDataByteOffsetDepth;
 		unsigned int vertexCountDepth;
+
+        enum { maxMeshName = 128 };
+        char name[maxMeshName];
 	};
 	Mesh *m_pMesh;
 
