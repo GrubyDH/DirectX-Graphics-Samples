@@ -52,7 +52,7 @@ bool Model::LoadAssimp(const char *filename)
 		aiProcess_FindInvalidData |
 		aiProcess_GenUVCoords |
 		aiProcess_TransformUVCoords |
-		//aiProcess_OptimizeMeshes |
+		aiProcess_OptimizeMeshes |
 		aiProcess_OptimizeGraph);
 
 	if (scene == nullptr)
@@ -159,8 +159,6 @@ bool Model::LoadAssimp(const char *filename)
 	{
 		const aiMesh *srcMesh = scene->mMeshes[meshIndex];
 		Mesh *dstMesh = m_pMesh + meshIndex;
-
-        strncpy_s(dstMesh->name, srcMesh->mName.C_Str(), Mesh::maxMeshName - 1);
 
 		assert(srcMesh->mPrimitiveTypes == aiPrimitiveType_TRIANGLE);
 
