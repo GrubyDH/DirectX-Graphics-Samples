@@ -49,10 +49,6 @@
 #endif
 #include "CompiledShaders/WaveTileCountPS.h"
 
-using namespace GameCore;
-using namespace Math;
-using namespace Graphics;
-
 class ModelViewer : public GameCore::IGameApp
 {
 public:
@@ -73,7 +69,7 @@ private:
     void RenderObjects( GraphicsContext& Context, const Matrix4& ViewProjMat, eObjectFilter Filter = kAll );
     void CreateParticleEffects();
     Camera m_Camera;
-    std::auto_ptr<CameraController> m_CameraController;
+    std::auto_ptr<GameCore::CameraController> m_CameraController;
     Matrix4 m_ViewProjMatrix;
     D3D12_VIEWPORT m_MainViewport;
     D3D12_RECT m_MainScissor;
@@ -96,11 +92,11 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE m_BiasedDefaultSampler;
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[6];
-    Model m_Model;
+    Graphics::Model m_Model;
     std::vector<bool> m_pMaterialIsCutout;
 
     Vector3 m_SunDirection;
-    ShadowCamera m_SunShadow;
+    GameCore::ShadowCamera m_SunShadow;
 };
 
 CREATE_APPLICATION( ModelViewer )
@@ -125,7 +121,7 @@ void ModelViewer::Startup( void )
 
     m_RootSig.Reset(5, 2);
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
-    m_RootSig.InitStaticSampler(1, SamplerShadowDesc, D3D12_SHADER_VISIBILITY_PIXEL);
+    m_RootSig.InitStaticSampler(1, Graphics::SamplerShadowDesc, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
     m_RootSig[1].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[2].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -133,9 +129,9 @@ void ModelViewer::Startup( void )
     m_RootSig[4].InitAsConstants(1, 2, D3D12_SHADER_VISIBILITY_VERTEX);
     m_RootSig.Finalize(L"ModelViewer", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-    DXGI_FORMAT ColorFormat = g_SceneColorBuffer.GetFormat();
-    DXGI_FORMAT DepthFormat = g_SceneDepthBuffer.GetFormat();
-    DXGI_FORMAT ShadowFormat = g_ShadowBuffer.GetFormat();
+    DXGI_FORMAT ColorFormat = Graphics::g_SceneColorBuffer.GetFormat();
+    DXGI_FORMAT DepthFormat = Graphics::g_SceneDepthBuffer.GetFormat();
+    DXGI_FORMAT ShadowFormat = Graphics::g_ShadowBuffer.GetFormat();
 
     D3D12_INPUT_ELEMENT_DESC vertElem[] =
     {
@@ -148,9 +144,9 @@ void ModelViewer::Startup( void )
 
     // Depth-only (2x rate)
     m_DepthPSO.SetRootSignature(m_RootSig);
-    m_DepthPSO.SetRasterizerState(RasterizerDefault);
-    m_DepthPSO.SetBlendState(BlendNoColorWrite);
-    m_DepthPSO.SetDepthStencilState(DepthStateReadWrite);
+    m_DepthPSO.SetRasterizerState(Graphics::RasterizerDefault);
+    m_DepthPSO.SetBlendState(Graphics::BlendNoColorWrite);
+    m_DepthPSO.SetDepthStencilState(Graphics::DepthStateReadWrite);
     m_DepthPSO.SetInputLayout(_countof(vertElem), vertElem);
     m_DepthPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
     m_DepthPSO.SetRenderTargetFormats(0, nullptr, DepthFormat);
@@ -160,25 +156,25 @@ void ModelViewer::Startup( void )
     // Depth-only shading but with alpha testing
     m_CutoutDepthPSO = m_DepthPSO;
     m_CutoutDepthPSO.SetPixelShader(g_pDepthViewerPS, sizeof(g_pDepthViewerPS));
-    m_CutoutDepthPSO.SetRasterizerState(RasterizerTwoSided);
+    m_CutoutDepthPSO.SetRasterizerState(Graphics::RasterizerTwoSided);
     m_CutoutDepthPSO.Finalize();
 
     // Depth-only but with a depth bias and/or render only backfaces
     m_ShadowPSO = m_DepthPSO;
-    m_ShadowPSO.SetRasterizerState(RasterizerShadow);
-    m_ShadowPSO.SetRenderTargetFormats(0, nullptr, g_ShadowBuffer.GetFormat());
+    m_ShadowPSO.SetRasterizerState(Graphics::RasterizerShadow);
+    m_ShadowPSO.SetRenderTargetFormats(0, nullptr, Graphics::g_ShadowBuffer.GetFormat());
     m_ShadowPSO.Finalize();
 
     // Shadows with alpha testing
     m_CutoutShadowPSO = m_ShadowPSO;
     m_CutoutShadowPSO.SetPixelShader(g_pDepthViewerPS, sizeof(g_pDepthViewerPS));
-    m_CutoutShadowPSO.SetRasterizerState(RasterizerShadowTwoSided);
+    m_CutoutShadowPSO.SetRasterizerState(Graphics::RasterizerShadowTwoSided);
     m_CutoutShadowPSO.Finalize();
 
     // Full color pass
     m_ModelPSO = m_DepthPSO;
-    m_ModelPSO.SetBlendState(BlendDisable);
-    m_ModelPSO.SetDepthStencilState(DepthStateTestEqual);
+    m_ModelPSO.SetBlendState(Graphics::BlendDisable);
+    m_ModelPSO.SetDepthStencilState(Graphics::DepthStateTestEqual);
     m_ModelPSO.SetRenderTargetFormats(1, &ColorFormat, DepthFormat);
     m_ModelPSO.SetVertexShader( g_pModelViewerVS, sizeof(g_pModelViewerVS) );
     m_ModelPSO.SetPixelShader( g_pModelViewerPS, sizeof(g_pModelViewerPS) );
@@ -196,7 +192,7 @@ void ModelViewer::Startup( void )
 #endif
 
     m_CutoutModelPSO = m_ModelPSO;
-    m_CutoutModelPSO.SetRasterizerState(RasterizerTwoSided);
+    m_CutoutModelPSO.SetRasterizerState(Graphics::RasterizerTwoSided);
     m_CutoutModelPSO.Finalize();
 
     // A debug shader for counting lights in a tile
@@ -206,8 +202,8 @@ void ModelViewer::Startup( void )
 
     Lighting::InitializeResources();
 
-    m_ExtraTextures[0] = g_SSAOFullScreen.GetSRV();
-    m_ExtraTextures[1] = g_ShadowBuffer.GetSRV();
+    m_ExtraTextures[0] = Graphics::g_SSAOFullScreen.GetSRV();
+    m_ExtraTextures[1] = Graphics::g_ShadowBuffer.GetSRV();
 
     TextureManager::Initialize(L"Textures/");
     ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
@@ -217,7 +213,7 @@ void ModelViewer::Startup( void )
     m_pMaterialIsCutout.resize(m_Model.m_Header.materialCount);
     for (uint32_t i = 0; i < m_Model.m_Header.materialCount; ++i)
     {
-        const Model::Material& mat = m_Model.m_pMaterial[i];
+        const Graphics::Model::Material& mat = m_Model.m_pMaterial[i];
         if (std::string(mat.texDiffusePath).find("thorn") != std::string::npos ||
             std::string(mat.texDiffusePath).find("plant") != std::string::npos ||
             std::string(mat.texDiffusePath).find("chain") != std::string::npos)
@@ -236,7 +232,7 @@ void ModelViewer::Startup( void )
     const Vector3 eye = (m_Model.m_Header.boundingBox.min + m_Model.m_Header.boundingBox.max) * .5f + Vector3(modelRadius * .5f, 0.0f, 0.0f);
     m_Camera.SetEyeAtUp( eye, Vector3(kZero), Vector3(kYUnitVector) );
     m_Camera.SetZRange( 1.0f, 10000.0f );
-    m_CameraController.reset(new CameraController(m_Camera, Vector3(kYUnitVector)));
+    m_CameraController.reset(new GameCore::CameraController(m_Camera, Vector3(kYUnitVector)));
 
     MotionBlur::Enable = true;
     TemporalEffects::EnableTAA = true;
@@ -269,9 +265,9 @@ void ModelViewer::Update( float deltaT )
     ScopedTimer _prof(L"Update State");
 
     if (GameInput::IsFirstPressed(GameInput::kLShoulder))
-        DebugZoom.Decrement();
+        Graphics::DebugZoom.Decrement();
     else if (GameInput::IsFirstPressed(GameInput::kRShoulder))
-        DebugZoom.Increment();
+        Graphics::DebugZoom.Increment();
 
     m_CameraController->Update(deltaT);
     m_ViewProjMatrix = m_Camera.GetViewProjMatrix();
@@ -292,15 +288,15 @@ void ModelViewer::Update( float deltaT )
     // temporal AA.
     TemporalEffects::GetJitterOffset(m_MainViewport.TopLeftX, m_MainViewport.TopLeftY);
 
-    m_MainViewport.Width = (float)g_SceneColorBuffer.GetWidth();
-    m_MainViewport.Height = (float)g_SceneColorBuffer.GetHeight();
+    m_MainViewport.Width = (float)Graphics::g_SceneColorBuffer.GetWidth();
+    m_MainViewport.Height = (float)Graphics::g_SceneColorBuffer.GetHeight();
     m_MainViewport.MinDepth = 0.0f;
     m_MainViewport.MaxDepth = 1.0f;
 
     m_MainScissor.left = 0;
     m_MainScissor.top = 0;
-    m_MainScissor.right = (LONG)g_SceneColorBuffer.GetWidth();
-    m_MainScissor.bottom = (LONG)g_SceneColorBuffer.GetHeight();
+    m_MainScissor.right = (LONG)Graphics::g_SceneColorBuffer.GetWidth();
+    m_MainScissor.bottom = (LONG)Graphics::g_SceneColorBuffer.GetHeight();
 }
 
 void ModelViewer::RenderObjects( GraphicsContext& gfxContext, const Matrix4& ViewProjMat, eObjectFilter Filter )
@@ -323,7 +319,7 @@ void ModelViewer::RenderObjects( GraphicsContext& gfxContext, const Matrix4& Vie
 
     for (uint32_t meshIndex = 0; meshIndex < m_Model.m_Header.meshCount; meshIndex++)
     {
-        const Model::Mesh& mesh = m_Model.m_pMesh[meshIndex];
+        const Graphics::Model::Mesh& mesh = m_Model.m_pMesh[meshIndex];
 
         uint32_t indexCount = mesh.indexCount;
         uint32_t startIndex = mesh.indexDataByteOffset / sizeof(uint16_t);
@@ -414,11 +410,11 @@ void ModelViewer::RenderScene( void )
     psConstants.sunDirection = m_SunDirection;
     psConstants.sunLight = Vector3(1.0f, 1.0f, 1.0f) * m_SunLightIntensity;
     psConstants.ambientLight = Vector3(1.0f, 1.0f, 1.0f) * m_AmbientIntensity;
-    psConstants.ShadowTexelSize[0] = 1.0f / g_ShadowBuffer.GetWidth();
+    psConstants.ShadowTexelSize[0] = 1.0f / Graphics::g_ShadowBuffer.GetWidth();
     psConstants.InvTileDim[0] = 1.0f / Lighting::LightGridDim;
     psConstants.InvTileDim[1] = 1.0f / Lighting::LightGridDim;
-    psConstants.TileCount[0] = Math::DivideByMultiple(g_SceneColorBuffer.GetWidth(), Lighting::LightGridDim);
-    psConstants.TileCount[1] = Math::DivideByMultiple(g_SceneColorBuffer.GetHeight(), Lighting::LightGridDim);
+    psConstants.TileCount[0] = Math::DivideByMultiple(Graphics::g_SceneColorBuffer.GetWidth(), Lighting::LightGridDim);
+    psConstants.TileCount[1] = Math::DivideByMultiple(Graphics::g_SceneColorBuffer.GetHeight(), Lighting::LightGridDim);
     psConstants.FirstLightIndex[0] = Lighting::m_FirstConeLight;
     psConstants.FirstLightIndex[1] = Lighting::m_FirstConeShadowedLight;
     psConstants.FrameIndexMod2 = FrameIndex;
@@ -443,15 +439,15 @@ void ModelViewer::RenderScene( void )
 
         {
             ScopedTimer _prof(L"Opaque", gfxContext);
-            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
-            gfxContext.ClearDepth(g_SceneDepthBuffer);
+            gfxContext.TransitionResource(Graphics::g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+            gfxContext.ClearDepth(Graphics::g_SceneDepthBuffer);
 
 #ifdef _WAVE_OP
             gfxContext.SetPipelineState(EnableWaveOps ? m_DepthWaveOpsPSO : m_DepthPSO );
 #else
             gfxContext.SetPipelineState(m_DepthPSO);
 #endif
-            gfxContext.SetDepthStencilTarget(g_SceneDepthBuffer.GetDSV());
+            gfxContext.SetDepthStencilTarget(Graphics::g_SceneDepthBuffer.GetDSV());
             gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
             RenderObjects(gfxContext, m_ViewProjMatrix, kOpaque );
         }
@@ -471,8 +467,8 @@ void ModelViewer::RenderScene( void )
     {
         ScopedTimer _prof(L"Main Render", gfxContext);
 
-        gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-        gfxContext.ClearColor(g_SceneColorBuffer);
+        gfxContext.TransitionResource(Graphics::g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+        gfxContext.ClearColor(Graphics::g_SceneColorBuffer);
 
         pfnSetupGraphicsState();
 
@@ -480,14 +476,14 @@ void ModelViewer::RenderScene( void )
             ScopedTimer _prof(L"Render Shadow Map", gfxContext);
 
             m_SunShadow.UpdateMatrix(-m_SunDirection, Vector3(0, -500.0f, 0), Vector3(ShadowDimX, ShadowDimY, ShadowDimZ),
-                (uint32_t)g_ShadowBuffer.GetWidth(), (uint32_t)g_ShadowBuffer.GetHeight(), 16);
+                (uint32_t)Graphics::g_ShadowBuffer.GetWidth(), (uint32_t)Graphics::g_ShadowBuffer.GetHeight(), 16);
 
-            g_ShadowBuffer.BeginRendering(gfxContext);
+            Graphics::g_ShadowBuffer.BeginRendering(gfxContext);
             gfxContext.SetPipelineState(m_ShadowPSO);
             RenderObjects(gfxContext, m_SunShadow.GetViewProjMatrix(), kOpaque);
             gfxContext.SetPipelineState(m_CutoutShadowPSO);
             RenderObjects(gfxContext, m_SunShadow.GetViewProjMatrix(), kCutout);
-            g_ShadowBuffer.EndRendering(gfxContext);
+            Graphics::g_ShadowBuffer.EndRendering(gfxContext);
         }
 
         if (SSAO::AsyncCompute)
@@ -496,13 +492,13 @@ void ModelViewer::RenderScene( void )
             pfnSetupGraphicsState();
 
             // Make the 3D queue wait for the Compute queue to finish SSAO
-            g_CommandManager.GetGraphicsQueue().StallForProducer(g_CommandManager.GetComputeQueue());
+            Graphics::g_CommandManager.GetGraphicsQueue().StallForProducer(Graphics::g_CommandManager.GetComputeQueue());
         }
 
         {
             ScopedTimer _prof(L"Render Color", gfxContext);
 
-            gfxContext.TransitionResource(g_SSAOFullScreen, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            gfxContext.TransitionResource(Graphics::g_SSAOFullScreen, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
             gfxContext.SetDynamicDescriptors(3, 0, _countof(m_ExtraTextures), m_ExtraTextures);
             gfxContext.SetDynamicConstantBufferView(1, sizeof(psConstants), &psConstants);
@@ -511,8 +507,8 @@ void ModelViewer::RenderScene( void )
 #else
             gfxContext.SetPipelineState(ShowWaveTileCounts ? m_WaveTileCountPSO : m_ModelPSO);
 #endif
-            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ);
-            gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV_DepthReadOnly());
+            gfxContext.TransitionResource(Graphics::g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ);
+            gfxContext.SetRenderTarget(Graphics::g_SceneColorBuffer.GetRTV(), Graphics::g_SceneDepthBuffer.GetDSV_DepthReadOnly());
             gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 
             RenderObjects( gfxContext, m_ViewProjMatrix, kOpaque );
@@ -533,13 +529,13 @@ void ModelViewer::RenderScene( void )
 
     TemporalEffects::ResolveImage(gfxContext);
 
-    ParticleEffects::Render(gfxContext, m_Camera, g_SceneColorBuffer, g_SceneDepthBuffer,  g_LinearDepth[FrameIndex]);
+    ParticleEffects::Render(gfxContext, m_Camera, Graphics::g_SceneColorBuffer, Graphics::g_SceneDepthBuffer, Graphics::g_LinearDepth[FrameIndex]);
 
     // Until I work out how to couple these two, it's "either-or".
     if (DepthOfField::Enable)
         DepthOfField::Render(gfxContext, m_Camera.GetNearClip(), m_Camera.GetFarClip());
     else
-        MotionBlur::RenderObjectBlur(gfxContext, g_VelocityBuffer);
+        MotionBlur::RenderObjectBlur(gfxContext, Graphics::g_VelocityBuffer);
 
     gfxContext.Finish();
 }
