@@ -71,6 +71,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MeshGenerator.h" />
     <ClInclude Include="Model.h" />
   </ItemGroup>
   <ItemGroup>
