@@ -7,7 +7,7 @@ namespace Graphics {
 class MeshGenerator {
 public:
 
-static Model Sphere(Vector3 pos, float radius, uint16_t nSlices, uint16_t nStacks) {
+static void Sphere(Model& model, Vector3 pos, float radius, uint16_t nSlices, uint16_t nStacks) {
     // Generate vertex/index data.
     std::vector<Vertex> vertices;
     std::vector<DirectX::XMFLOAT3> verticesDepth;
@@ -17,14 +17,14 @@ static Model Sphere(Vector3 pos, float radius, uint16_t nSlices, uint16_t nStack
     // not a unique point on the texture map to assign to the pole when mapping
     // a rectangular texture onto a sphere.
     Vertex topVertex(
-        0.0f, +radius, 0.0f,
+        pos.GetX(), pos.GetY() + radius, pos.GetZ(),
         0.0f, 0.0f,
         0.0f, +1.0f, 0.0f,
         1.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 1.0f
     );
     Vertex bottomVertex(
-        0.0f, -radius, 0.0f,
+        pos.GetX(), pos.GetY() - radius, pos.GetZ(),
         0.0f, 1.0f,
         0.0f, -1.0f, 0.0f,
         1.0f, 0.0f, 0.0f,
@@ -47,9 +47,9 @@ static Model Sphere(Vector3 pos, float radius, uint16_t nSlices, uint16_t nStack
             Vertex v;
 
             // Spherical to cartesian.
-            v.Position.x = radius * sinf(phi) * cosf(theta);
-            v.Position.y = radius * cosf(phi);
-            v.Position.z = radius * sinf(phi) * sinf(theta);
+            v.Position.x = pos.GetX() + radius * sinf(phi) * cosf(theta);
+            v.Position.y = pos.GetY() + radius * cosf(phi);
+            v.Position.z = pos.GetZ() + radius * sinf(phi) * sinf(theta);
 
             v.TexC.x = theta / XM_2PI;
             v.TexC.y = phi / XM_PI;
@@ -126,8 +126,7 @@ static Model Sphere(Vector3 pos, float radius, uint16_t nSlices, uint16_t nStack
         indices.push_back(baseIndex + i + 1);
     }
 
-    Model::BoundingBox bbox = { pos - Vector3(radius), pos + Vector3(radius) };
-    Model sphere = CreateModel(bbox, vertices, verticesDepth, indices);
+    CreateModel(model, vertices, verticesDepth, indices);
 }
 
 private:
@@ -152,49 +151,56 @@ private:
         DirectX::XMFLOAT3 BitangentU;
     };
 
-static Model CreateModel(const Model::BoundingBox & bbox, const std::vector<Vertex>& vertices, const std::vector<DirectX::XMFLOAT3>& verticesDepth, const std::vector<uint16_t>& indices) {
-        Model model;
+static void CreateModel(Model& model, const std::vector<Vertex>& vertices, const std::vector<DirectX::XMFLOAT3>& verticesDepth, const std::vector<uint16_t>& indices) {
 
         unsigned int vertexStride = sizeof(Vertex);
         unsigned int vertexStrideDepth = sizeof(DirectX::XMFLOAT3);
-        uint32_t vertexDataByteSize = vertices.size() * vertexStride;
-        uint32_t indexDataByteSize = indices.size() * sizeof(uint16_t);
-        uint32_t vertexDataByteSizeDepth = verticesDepth.size() * vertexStrideDepth;
+        uint32_t vertexDataByteSize = static_cast<uint32_t>(vertices.size() * vertexStride);
+        uint32_t indexDataByteSize = static_cast<uint32_t>(indices.size() * sizeof(uint16_t));
+        uint32_t vertexDataByteSizeDepth = static_cast<uint32_t>(verticesDepth.size() * vertexStrideDepth);
 
-        model.m_Header = { 1, 1, vertexDataByteSize, indexDataByteSize, vertexDataByteSizeDepth, bbox };
+        model.m_Header = { 1, 1, vertexDataByteSize, indexDataByteSize, vertexDataByteSizeDepth };
 
         unsigned int attribsEnabled = Model::attrib_mask_position | Model::attrib_mask_texcoord0 | Model::attrib_mask_normal | Model::attrib_mask_tangent | Model::attrib_mask_bitangent;
         unsigned int attribsEnabledDepth = Model::attrib_mask_position;
 
-        model.m_pMesh = new Model::Mesh{
-            bbox,                   // boundingBox
-            0,                      // materialIndex
+        model.m_pMesh = new Model::Mesh[1]{ {
+            Model::BoundingBox{},
+            0,                                              // materialIndex
             attribsEnabled,
             attribsEnabledDepth,
             vertexStride,
             vertexStrideDepth,
-            {                       // attrib
+            {                                               // attrib
                 { 0, 0, 3, Model::attrib_format_float },
                 { sizeof(DirectX::XMFLOAT3), 0, 2, Model::attrib_format_float },
                 { sizeof(DirectX::XMFLOAT3) + sizeof(DirectX::XMFLOAT2), 0, 3, Model::attrib_format_float },
                 { 2 * sizeof(DirectX::XMFLOAT3) + sizeof(DirectX::XMFLOAT2), 0, 3, Model::attrib_format_float },
                 { 3 * sizeof(DirectX::XMFLOAT3) + sizeof(DirectX::XMFLOAT2), 0, 3, Model::attrib_format_float }
             },
-            {                       // attribDepth
+            {                                               // attribDepth
                 { 0, 0, 3, Model::attrib_format_float }
             },
 
-            0,                      // vertexDataByteOffset
-            vertices.size(),        // vertexCount
-            0,                      // indexDataByteOffset
-            indices.size(),         // indexCount
+            0,                                              // vertexDataByteOffset
+            static_cast<unsigned int>(vertices.size()),     // vertexCount
+            0,                                              // indexDataByteOffset
+            static_cast<unsigned int>(indices.size()),      // indexCount
 
-            0,                      // vertexDataByteOffsetDepth
-            verticesDepth.size()    // vertexCountDepth
-        };
+            0,                                              // vertexDataByteOffsetDepth
+            static_cast<unsigned int>(verticesDepth.size()) // vertexCountDepth
+        } };
 
-        // TODO: Fill the material struct.
-        model.m_pMaterial = new Model::Material;
+        model.m_pMaterial = new Model::Material[1]{ {
+            Vector3(0.6f, 0.6f, 0.6f),  // diffuse
+            Vector3(0.0f, 0.0f, 0.0f),  // specular
+            Vector3(0.0f, 0.0f, 0.0f),  // ambient
+            Vector3(0.0f, 0.0f, 0.0f),  // emissive
+            Vector3(0.0f, 0.0f, 0.0f),  // transparent
+            1.0f,                       // opacity
+            0.0f,                       // shininess
+            1.0f                        // specularStrength
+        } };
 
         model.m_VertexStride = vertexStride;
         model.m_VertexStrideDepth = vertexStrideDepth;
@@ -204,6 +210,13 @@ static Model CreateModel(const Model::BoundingBox & bbox, const std::vector<Vert
 
         model.m_VertexBufferDepth.Create(L"VertexBufferDepth", vertexDataByteSizeDepth / vertexStrideDepth, vertexStrideDepth, verticesDepth.data());
         model.m_IndexBufferDepth.Create(L"IndexBufferDepth", indexDataByteSize / sizeof(uint16_t), sizeof(uint16_t), indices.data());
+
+        // Required for calculating bounding box.
+        model.m_pVertexData = const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(vertices.data()));
+        model.ComputeAllBoundingBoxes();
+        model.m_pVertexData = nullptr;
+
+        model.LoadTextures();
     }
 };
 
