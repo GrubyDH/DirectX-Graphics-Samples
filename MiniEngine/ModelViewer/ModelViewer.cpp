@@ -32,6 +32,7 @@
 #include "ShadowCamera.h"
 #include "ParticleEffectManager.h"
 #include "GameInput.h"
+#include "MeshGenerator.h"
 #include "./ForwardPlusLighting.h"
 
 // To enable wave intrinsics, uncomment this macro and #define DXIL in Core/GraphcisCore.cpp.
@@ -93,6 +94,7 @@ private:
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[6];
     Graphics::Model m_Model;
+    Graphics::Model m_Sphere;
     std::vector<bool> m_pMaterialIsCutout;
 
     Vector3 m_SunDirection;
@@ -208,6 +210,8 @@ void ModelViewer::Startup( void )
     TextureManager::Initialize(L"Textures/");
     ASSERT(m_Model.Load("Models/sponza.h3d"), "Failed to load model");
     ASSERT(m_Model.m_Header.meshCount > 0, "Model contains no meshes");
+    Vector3 spherePos = (m_Model.m_Header.boundingBox.min + m_Model.m_Header.boundingBox.max) * .5f + Vector3(400.0f, 0.0f, 0.0f);
+    Graphics::MeshGenerator::Sphere(m_Sphere, spherePos, 100.0f, 100, 100);
 
     // The caller of this function can override which materials are considered cutouts
     m_pMaterialIsCutout.resize(m_Model.m_Header.materialCount);
@@ -338,6 +342,37 @@ void ModelViewer::RenderObjects( GraphicsContext& gfxContext, const Matrix4& Vie
         gfxContext.SetConstants(4, baseVertex, materialIdx);
 
         gfxContext.DrawIndexed(indexCount, startIndex, baseVertex);
+    }
+
+    if (Filter == kOpaque) {
+        // Render sphere.
+        gfxContext.SetIndexBuffer(m_Sphere.m_IndexBuffer.IndexBufferView());
+        gfxContext.SetVertexBuffer(0, m_Sphere.m_VertexBuffer.VertexBufferView());
+
+        VertexStride = m_Sphere.m_VertexStride;
+        const Graphics::Model::Mesh& mesh = m_Sphere.m_pMesh[0];
+
+        uint32_t indexCount = mesh.indexCount;
+        uint32_t startIndex = mesh.indexDataByteOffset / sizeof(uint16_t);
+        uint32_t baseVertex = mesh.vertexDataByteOffset / VertexStride;
+
+        if (mesh.materialIndex != materialIdx)
+        {
+            if (m_pMaterialIsCutout[mesh.materialIndex] && !(Filter & kCutout) ||
+                !m_pMaterialIsCutout[mesh.materialIndex] && !(Filter & kOpaque))
+                return;
+
+            materialIdx = mesh.materialIndex;
+            gfxContext.SetDynamicDescriptors(2, 0, 6, m_Sphere.GetSRVs(materialIdx));
+        }
+
+        gfxContext.SetConstants(4, baseVertex, materialIdx);
+
+        gfxContext.DrawIndexed(indexCount, startIndex, baseVertex);
+
+        // Restore model's buffers.
+        gfxContext.SetIndexBuffer(m_Model.m_IndexBuffer.IndexBufferView());
+        gfxContext.SetVertexBuffer(0, m_Model.m_VertexBuffer.VertexBufferView());
     }
 }
 
