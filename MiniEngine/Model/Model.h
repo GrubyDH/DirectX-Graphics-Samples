@@ -24,6 +24,7 @@ namespace Graphics
 
 class Model
 {
+    friend class MeshGenerator;
 public:
 
     enum
