@@ -31,6 +31,8 @@ public:
 
     static void DestroyAll(void);
 
+    ID3D12DescriptorHeap* GetCurrentHeapPointer() const { return m_CurrentHeap; }
+
 protected:
 
     static const uint32_t sm_NumDescriptorsPerHeap = 256;
