@@ -200,6 +200,7 @@ void ModelViewer::Startup( void )
     // A debug shader for counting lights in a tile
     m_WaveTileCountPSO = m_ModelPSO;
     m_WaveTileCountPSO.SetPixelShader(g_pWaveTileCountPS, sizeof(g_pWaveTileCountPS));
+    m_WaveTileCountPSO.SetRasterizerState(Graphics::RasterizerTwoSided);
     m_WaveTileCountPSO.Finalize();
 
     Lighting::InitializeResources();
@@ -548,11 +549,8 @@ void ModelViewer::RenderScene( void )
 
             RenderObjects( gfxContext, m_ViewProjMatrix, kOpaque );
 
-            if (!ShowWaveTileCounts)
-            {
-                gfxContext.SetPipelineState(m_CutoutModelPSO);
-                RenderObjects( gfxContext, m_ViewProjMatrix, kCutout );
-            }
+            gfxContext.SetPipelineState(ShowWaveTileCounts ? m_WaveTileCountPSO : m_CutoutModelPSO);
+            RenderObjects( gfxContext, m_ViewProjMatrix, kCutout );
         }
 
     }
