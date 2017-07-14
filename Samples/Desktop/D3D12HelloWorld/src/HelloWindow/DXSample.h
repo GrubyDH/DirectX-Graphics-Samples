@@ -17,6 +17,9 @@
 class DXSample
 {
 public:
+    /* Initialize all members.
+       - m_assetsPath is set to the same directory as the executable
+    */
 	DXSample(UINT width, UINT height, std::wstring name);
 	virtual ~DXSample();
 
@@ -34,6 +37,7 @@ public:
 	UINT GetHeight() const          { return m_height; }
 	const WCHAR* GetTitle() const   { return m_title.c_str(); }
 
+    // Handle warp device parameter.
 	void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
 
 protected:

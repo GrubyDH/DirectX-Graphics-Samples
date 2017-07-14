@@ -25,8 +25,27 @@ class D3D12HelloWindow : public DXSample
 public:
 	D3D12HelloWindow(UINT width, UINT height, std::wstring name);
 
+    /* Initialize graphics pipeline:
+       - Create device (warp or hardware, debug or not)
+       - Comman queue (direct)
+       - Swap chain (# FrameCount backbuffers)
+       - RTV descriptor heap (# FrameCount descriptors)
+       - Frame resources (RTs and RTVs)
+       - Command allocator (direct)
+
+       Initialize assets:
+       - Command list (direct)
+       - Fence object
+       - Fence event
+    */
 	virtual void OnInit();
 	virtual void OnUpdate();
+    /* Render frame:
+       - Populate a command list
+       - Execute the command list on a command queue
+       - Present
+       - Wait for frame to finish
+    */
 	virtual void OnRender();
 	virtual void OnDestroy();
 
@@ -52,6 +71,15 @@ private:
 
 	void LoadPipeline();
 	void LoadAssets();
+
+    /* Populate command list:
+       - Reset the command allocator
+       - Reset the command queue (needs a command allocator and a PSO)
+       - Transition backbuffer from PRESENT to RT
+       - Clear RT
+       - Transition backbuffer from RT to PRESENT
+       - Close command list
+    */
 	void PopulateCommandList();
 	void WaitForPreviousFrame();
 };

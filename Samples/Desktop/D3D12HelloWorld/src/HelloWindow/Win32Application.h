@@ -18,6 +18,14 @@ class DXSample;
 class Win32Application
 {
 public:
+	/* Run application.
+       - Parse cmdline arguments
+       - Initialize a window class and create a window
+       - Initialize the sample
+       - Show the window
+       - Main loop with processing messages (with a possibility of forwarding key messages to the sample)
+       - Destroy sample
+	*/
 	static int Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow);
 	static HWND GetHwnd() { return m_hwnd; }
 
