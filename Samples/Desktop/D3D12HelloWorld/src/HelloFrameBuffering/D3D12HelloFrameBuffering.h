@@ -73,9 +73,45 @@ private:
 	ComPtr<ID3D12Fence> m_fence;
 	UINT64 m_fenceValues[FrameCount];
 
+    /* Initialize graphics pipeline:
+       - Create device (warp or hardware, debug or not)
+       - Comman queue (direct)
+       - Swap chain (# FrameCount backbuffers)
+       - RTV descriptor heap (# FrameCount descriptors)
+       - Frame resources (RTs and RTVs)
+       - Command allocator (direct; # FrameCount)
+    */
 	void LoadPipeline();
+
+    /* Initialize assets:
+       - Empty root signature (allow input assembler)
+       - VS, PS, PSO
+       - Command list(direct)
+       - Vertex buffer + view
+       - Fence object
+       - Fence event
+    */
 	void LoadAssets();
+
+    /* Populate command list:
+       - Reset the command allocator (for current frame)
+       - Reset the command queue (needs a command allocator and a PSO)
+       - Set root signature, viewport and scissors
+       - Transition backbuffer from PRESENT to RT
+       - Clear RT
+       - Set up input assembler
+       - Draw
+       - Transition backbuffer from RT to PRESENT
+       - Close command list
+    */
 	void PopulateCommandList();
+
+    /* Switches to next frame for rendering:
+       - Signal a fence on a current frame
+       - Switch to the next frame
+       - Wait for this frame to finish (GPU)
+       - Proceed with recording for that next frame
+    */
 	void MoveToNextFrame();
 	void WaitForGpu();
 };
